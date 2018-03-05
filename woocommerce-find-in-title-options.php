@@ -35,10 +35,11 @@ class Woocommerce_Find_In_Title_Options {
 	 * @return array
 	 */
 	private function sanitize( $array ) {
-		$new = array();
+		$new          = array();
+		$allowed_html = $this->get_allowed_html();
 		foreach ( $array as $index => $item ) {
-			$word = sanitize_text_field( trim( $item['word'] ) );
-			$text = sanitize_text_field( trim( $item['text'] ) );
+			$word = wp_kses( trim( $item['word'] ), $allowed_html );
+			$text = wp_kses( trim( $item['text'] ), $allowed_html );
 			if ( ! $word ) {
 				continue;
 			}
@@ -49,6 +50,14 @@ class Woocommerce_Find_In_Title_Options {
 		}
 
 		return $new;
+	}
+
+	/**
+	 * Allowed html tags for textarea
+	 * @return array|string
+	 */
+	public function get_allowed_html() {
+		return 'post';
 	}
 
 	/**

@@ -6,19 +6,11 @@
 
 defined( 'ABSPATH' ) || exit();
 
-/**
- * This plugin require woocommerce
- */
-if ( ! class_exists( 'WooCommerce' ) ) {
-	return;
-}
-
 require_once 'woocommerce-find-in-title-options.php';
 
 $plugin  = Woocommerce_Find_In_Title::get_instance();
 $options = Woocommerce_Find_In_Title_Options::get_instance();
 $plugin->run( $options );
-
 
 /**
  * Class Woocommerce_Find_In_Title
@@ -27,6 +19,7 @@ class Woocommerce_Find_In_Title {
 	private $slug;
 	private $options;
 	private static $instance = null;
+	private $post_title;
 
 	public function run( Woocommerce_Find_In_Title_Options $options ) {
 		$this->slug = 'woo-find-in-title';
@@ -37,6 +30,27 @@ class Woocommerce_Find_In_Title {
 
 		add_action( 'admin_menu', array( $this, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'script' ) );
+		add_filter( 'the_content', array( $this, 'add_description' ) );
+	}
+
+	public function add_description( $content ) {
+
+		if ( function_exists( 'is_product' ) && is_product() ) {
+			$this->post_title = get_the_title();
+
+			$found = array_filter( $this->options->get(), array( $this, 'find_title' ) );
+			if ( $found ) {
+				foreach ( $found as $index => $item ) {
+					$content .= "<div>{$item['text']}</div>";
+				}
+			}
+		}
+
+		return $content;
+	}
+
+	public function find_title( $item ) {
+		return stripos( $this->post_title, $item['word'] ) !== false;
 	}
 
 	/**
